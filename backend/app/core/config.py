@@ -51,6 +51,12 @@ class Settings(BaseSettings):
         alias='PRACTICE_AI_FALLBACK_MODELS',
     )
     practice_ai_base_url: str = Field(default='http://127.0.0.1:11434/v1', alias='PRACTICE_AI_BASE_URL')
+    practice_stream_delay_seconds: float = Field(
+        default=0.045,
+        alias='PRACTICE_STREAM_DELAY_SECONDS',
+        ge=0.0,
+        le=1.0,
+    )
     deepgram_model: str = 'nova-3'
     deepgram_language: str = 'en'
     sample_rate: int = 16000

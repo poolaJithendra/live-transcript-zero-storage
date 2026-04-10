@@ -37,10 +37,17 @@ def encode_stream_event(payload: dict) -> bytes:
     return (json.dumps(payload) + '\n').encode('utf-8')
 
 
-async def broadcast_streamed_answer(session_id: str, stream_id: str, answer: str, *, delay_seconds: float = 0.02) -> int:
+async def broadcast_streamed_answer(
+    session_id: str,
+    stream_id: str,
+    answer: str,
+    *,
+    delay_seconds: float | None = None,
+) -> int:
     viewer_count = session_manager.viewer_count(session_id)
     if viewer_count <= 0:
         return 0
+    effective_delay = settings.practice_stream_delay_seconds if delay_seconds is None else delay_seconds
 
     await session_manager.broadcast_json(
         session_id,
@@ -59,8 +66,8 @@ async def broadcast_streamed_answer(session_id: str, stream_id: str, answer: str
                 'text': chunk,
             },
         )
-        if delay_seconds > 0:
-            await asyncio.sleep(delay_seconds)
+        if effective_delay > 0:
+            await asyncio.sleep(effective_delay)
 
     await session_manager.broadcast_json(
         session_id,
@@ -217,6 +224,8 @@ async def stream_practice_answer(
                             'text': chunk,
                         },
                     )
+                if settings.practice_stream_delay_seconds > 0:
+                    await asyncio.sleep(settings.practice_stream_delay_seconds)
         except RuntimeError as error:
             if payload.share_to_viewer and viewer_count > 0:
                 await session_manager.broadcast_json(
