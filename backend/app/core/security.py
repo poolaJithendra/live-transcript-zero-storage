@@ -11,6 +11,19 @@ from app.core.config import settings
 LOOPBACK_CORS_REGEX = r'^https?://(localhost|127\.0\.0\.1)(:\d+)?$'
 
 
+def normalize_origin(value: str) -> str:
+    trimmed = value.strip().rstrip('/')
+    if not trimmed or trimmed == '*' or '://' not in trimmed:
+        return trimmed
+
+    parsed = urlparse(trimmed)
+    if parsed.scheme in {'http', 'https'} and parsed.hostname:
+        port = f':{parsed.port}' if parsed.port else ''
+        return f'{parsed.scheme}://{parsed.hostname}{port}'
+
+    return trimmed
+
+
 def expand_loopback_origins(origins: list[str]) -> list[str]:
     expanded: list[str] = []
 
@@ -36,7 +49,11 @@ def is_loopback_http_origin(origin: str) -> bool:
 
 def parse_allowed_origins(raw_value: str) -> tuple[list[str], str | None, bool]:
     allow_all_origins = raw_value.strip() == '*'
-    configured_origins = [origin.strip() for origin in raw_value.split(',') if origin.strip()]
+    configured_origins: list[str] = []
+    for origin in raw_value.split(','):
+        normalized = normalize_origin(origin)
+        if normalized:
+            configured_origins.append(normalized)
     allowed_origins = ['*'] if allow_all_origins else expand_loopback_origins(configured_origins)
 
     allow_origin_regex = None

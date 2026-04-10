@@ -33,6 +33,7 @@ const practiceMicStatus = document.getElementById('practiceMicStatus');
 const transcriptPlaceholder = transcriptBox.textContent;
 const practiceAnswerPlaceholder = aiAnswerBox.textContent;
 const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+const TARGET_SAMPLE_RATE = 16000;
 
 let socket;
 let audioContext;
@@ -424,6 +425,43 @@ function float32ToInt16(float32Array) {
   return buffer;
 }
 
+function downsampleToTargetSampleRate(float32Array, sourceSampleRate, targetSampleRate = TARGET_SAMPLE_RATE) {
+  if (sourceSampleRate <= 0 || targetSampleRate <= 0 || sourceSampleRate === targetSampleRate) {
+    return float32Array;
+  }
+
+  if (sourceSampleRate < targetSampleRate) {
+    return float32Array;
+  }
+
+  const sampleRateRatio = sourceSampleRate / targetSampleRate;
+  const newLength = Math.max(1, Math.round(float32Array.length / sampleRateRatio));
+  const result = new Float32Array(newLength);
+
+  let resultIndex = 0;
+  let sourceIndex = 0;
+
+  while (resultIndex < result.length) {
+    const nextSourceIndex = Math.min(
+      float32Array.length,
+      Math.round((resultIndex + 1) * sampleRateRatio)
+    );
+
+    let sum = 0;
+    let count = 0;
+    for (let i = sourceIndex; i < nextSourceIndex; i += 1) {
+      sum += float32Array[i];
+      count += 1;
+    }
+
+    result[resultIndex] = count > 0 ? sum / count : 0;
+    resultIndex += 1;
+    sourceIndex = nextSourceIndex;
+  }
+
+  return result;
+}
+
 async function startStreaming() {
   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
     return;
@@ -438,8 +476,15 @@ async function startStreaming() {
   socket.onopen = async () => {
     try {
       setSpeakerStatus('Preparing mic', 'loading', 'Connected to the backend. Waiting for microphone access...');
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('This browser does not support microphone capture APIs.');
+      }
       mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioContext = new AudioContext({ sampleRate: 16000 });
+      audioContext = new AudioContext({ sampleRate: TARGET_SAMPLE_RATE });
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      const sourceSampleRate = audioContext.sampleRate || TARGET_SAMPLE_RATE;
       sourceNode = audioContext.createMediaStreamSource(mediaStream);
       processorNode = audioContext.createScriptProcessor(4096, 1, 1);
 
@@ -449,12 +494,21 @@ async function startStreaming() {
         }
 
         const input = event.inputBuffer.getChannelData(0);
-        socket.send(float32ToInt16(input));
+        const normalized = sourceSampleRate === TARGET_SAMPLE_RATE
+          ? input
+          : downsampleToTargetSampleRate(input, sourceSampleRate, TARGET_SAMPLE_RATE);
+        if (!normalized.length) {
+          return;
+        }
+        socket.send(float32ToInt16(normalized));
       };
 
       sourceNode.connect(processorNode);
       processorNode.connect(audioContext.destination);
-      setSpeakerStatus('Mic live', 'success', 'Audio is streaming to the backend and the transcript preview is active.');
+      const sampleRateMessage = sourceSampleRate === TARGET_SAMPLE_RATE
+        ? 'Audio is streaming to the backend and the transcript preview is active.'
+        : `Audio is streaming to the backend (${sourceSampleRate} Hz normalized to ${TARGET_SAMPLE_RATE} Hz).`;
+      setSpeakerStatus('Mic live', 'success', sampleRateMessage);
       updateTranscriptPreview('Listening for speech...');
       stopBtn.disabled = false;
     } catch (error) {
