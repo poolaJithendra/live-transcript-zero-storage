@@ -454,7 +454,13 @@ Important:
     ) -> tuple[int, bool, AsyncIterator[str]]:
         user_prompt, chunk_count, grounded = self._build_generation_context(question, resume_chunks, resume_text)
         provider = self._provider()
-        models_to_try = self._candidate_models() if provider == 'ollama' else [settings.practice_ai_model]
+        if provider == 'ollama':
+            models_to_try = self._candidate_models()
+        elif provider in {'azure', 'azure-openai', 'azure_openai'}:
+            azure_model = settings.azure_openai_deployment.strip() or settings.practice_ai_model.strip()
+            models_to_try = [azure_model]
+        else:
+            models_to_try = [settings.practice_ai_model.strip()]
 
         async def generator() -> AsyncIterator[str]:
             last_error: str | None = None
@@ -467,7 +473,7 @@ Important:
                     elif provider == 'openai':
                         stream = self._stream_with_openai(model_name, user_prompt)
                     elif provider in {'azure', 'azure-openai', 'azure_openai'}:
-                        stream = self._stream_with_azure(model_name or settings.azure_openai_deployment, user_prompt)
+                        stream = self._stream_with_azure(model_name, user_prompt)
                     else:
                         raise RuntimeError(
                             "Unsupported PRACTICE_AI_PROVIDER. Use 'ollama', 'openai', or 'azure'."
