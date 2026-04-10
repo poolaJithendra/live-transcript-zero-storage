@@ -159,11 +159,53 @@ function getViewerLink() {
   });
 }
 
+function handlePracticeMicStartFailure(error) {
+  const errorName = error && typeof error === 'object' ? error.name : '';
+  const permissionDenied = errorName === 'NotAllowedError' || errorName === 'SecurityError';
+  const insecureContext = !window.isSecureContext && window.location.protocol !== 'http:';
+
+  practiceMicRequested = false;
+  syncPracticeMicButtonLabel();
+  setLivePreviewPaused(false);
+
+  if (permissionDenied) {
+    setPracticeMicStatus('Practice mic blocked', 'error');
+    setPracticeStatus(
+      'Practice mic blocked',
+      'error',
+      'Allow microphone access in the browser for this page, then try Start practice mic again.'
+    );
+    return;
+  }
+
+  if (insecureContext) {
+    setPracticeMicStatus('Practice mic needs HTTPS', 'error');
+    setPracticeStatus(
+      'Practice mic unavailable',
+      'error',
+      'Practice mic requires a secure HTTPS origin (or localhost).'
+    );
+    return;
+  }
+
+  setPracticeMicStatus('Practice mic failed to start', 'error');
+  setPracticeStatus(
+    'Practice mic failed',
+    'error',
+    'Unable to start practice mic in this browser session. Refresh and try again.'
+  );
+}
+
 function startPracticeMicCapture() {
   const recognition = getPracticeRecognition();
   if (!recognition) {
     togglePracticeMicBtn.disabled = true;
     setPracticeMicStatus('Practice mic unsupported', 'warning');
+    setPracticeStatus(
+      'Practice mic unsupported',
+      'warning',
+      'This browser does not support SpeechRecognition for practice mic capture.'
+    );
     return;
   }
 
@@ -177,8 +219,13 @@ function startPracticeMicCapture() {
 
   try {
     recognition.start();
-  } catch {
-    setPracticeMicStatus('Practice mic already active', 'success');
+  } catch (error) {
+    if (error && typeof error === 'object' && error.name === 'InvalidStateError') {
+      setPracticeMicStatus('Practice mic already active', 'success');
+      return;
+    }
+
+    handlePracticeMicStartFailure(error);
   }
 }
 
@@ -287,6 +334,11 @@ function getPracticeRecognition() {
       setPracticeMicStatus('Practice mic blocked', 'error');
       syncPracticeMicButtonLabel();
       setLivePreviewPaused(false);
+      setPracticeStatus(
+        'Practice mic blocked',
+        'error',
+        'Allow microphone access in browser settings, then try Start practice mic again.'
+      );
       return;
     }
 
@@ -295,7 +347,26 @@ function getPracticeRecognition() {
       return;
     }
 
+    if (event.error === 'aborted') {
+      return;
+    }
+
+    practiceMicRequested = false;
+    syncPracticeMicButtonLabel();
+    setLivePreviewPaused(false);
+
+    if (event.error === 'audio-capture') {
+      setPracticeMicStatus('No microphone detected', 'error');
+      setPracticeStatus('Practice mic error', 'error', 'No usable microphone was detected by the browser.');
+      return;
+    }
+
     setPracticeMicStatus('Practice mic error', 'error');
+    setPracticeStatus(
+      'Practice mic error',
+      'error',
+      `Browser speech recognition error: ${event.error || 'unknown'}.`
+    );
   };
 
   practiceRecognition.onend = () => {
@@ -303,8 +374,9 @@ function getPracticeRecognition() {
       try {
         practiceRecognition.start();
         return;
-      } catch {
-        setPracticeMicStatus('Restarting practice mic...', 'loading');
+      } catch (error) {
+        handlePracticeMicStartFailure(error);
+        return;
       }
     }
 
