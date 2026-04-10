@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/frontend/index.html" },
+    { "source": "/index.html", "destination": "/frontend/index.html" },
+    { "source": "/speaker.html", "destination": "/frontend/speaker.html" },
+    { "source": "/viewer.html", "destination": "/frontend/viewer.html" },
+    { "source": "/js/(.*)", "destination": "/frontend/js/$1" },
+    { "source": "/css/(.*)", "destination": "/frontend/css/$1" }
+  ]
+}

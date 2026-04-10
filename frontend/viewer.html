@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Viewer Console</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body class="screen-viewer">
+  <main class="page-shell page-shell-wide">
+    <header class="app-header compact-header">
+      <div class="brand-lockup">
+        <p class="eyebrow">Viewer console</p>
+        <h1 class="page-title medium">Follow the live transcript with a cleaner stage layout.</h1>
+      </div>
+      <div class="header-pill">Audience view</div>
+    </header>
+
+    <section class="surface viewer-topbar">
+      <div class="viewer-topbar-main">
+        <div class="cluster">
+          <div class="meta-chip">Session <strong id="sessionId"></strong></div>
+          <div id="statusBadge" class="status-chip" data-state="loading">Connecting</div>
+        </div>
+        <p id="viewerNotice" class="notice inline-notice" data-state="neutral">
+          Waiting for a secure connection to the backend.
+        </p>
+      </div>
+      <div class="actions viewer-tools">
+        <button id="toggleMicBtn" class="button button-secondary" type="button">Enable mic follow</button>
+        <button id="toggleAutoScrollBtn" class="button button-ghost" type="button" aria-pressed="true">Auto-scroll: On</button>
+        <span id="micStatus" class="status-chip" data-state="idle">Mic off</span>
+      </div>
+    </section>
+
+    <section class="viewer-stage-grid">
+      <article class="surface viewer-transcript-panel">
+        <div class="panel-head">
+          <div>
+            <p class="section-kicker">Final transcript</p>
+            <h2>Committed captions</h2>
+          </div>
+          <span class="mini-label">Scrollable read-along view</span>
+        </div>
+        <div id="finalText" class="transcript-block scrollable-transcript">Confirmed transcript lines will collect here.</div>
+      </article>
+
+      <aside class="viewer-sidebar">
+        <article class="surface viewer-partial-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Current partial</p>
+              <h2>Live phrase</h2>
+            </div>
+            <span class="mini-label">Streaming now</span>
+          </div>
+          <div id="partialText" class="transcript-block partial">Listening for speaker audio...</div>
+        </article>
+
+        <article class="surface viewer-practice-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Practice feed</p>
+              <h2>Shared answers</h2>
+            </div>
+            <div class="cluster practice-panel-tools">
+              <span class="mini-label">Streamed answer-only channel</span>
+              <button
+                id="togglePracticeFeedSizeBtn"
+                class="button button-ghost"
+                type="button"
+                aria-pressed="false"
+              >
+                Maximize
+              </button>
+            </div>
+          </div>
+          <div id="practiceFeed" class="transcript-block scrollable-transcript practice-feed-list">Shared practice answers and generated code will stream here.</div>
+        </article>
+
+        <article class="surface viewer-side-note">
+          <p class="section-kicker">Read-along mode</p>
+          <h2>Local microphone assist</h2>
+          <p class="muted">
+            Use mic follow on this device to track whichever lane is being spoken right now, including the final transcript and the shared-answer practice feed. It adds a yellow cue bar without changing the underlying viewer stream logic.
+          </p>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <script src="./js/common.js"></script>
+  <script src="./js/viewer.js"></script>
+</body>
+</html>

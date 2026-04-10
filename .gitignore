@@ -1,0 +1,14 @@
+backend/venv/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+backend/.env
+repo-for-push/backend/.env
+node_modules/
+frontend/node_modules/
+*.log
+dist/
+build/
+.cache/
+repo-for-push/

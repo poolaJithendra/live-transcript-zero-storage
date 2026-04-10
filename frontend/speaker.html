@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speaker Console</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body class="screen-speaker">
+  <main class="page-shell">
+    <header class="app-header compact-header">
+      <a class="back-link" href="./index.html">Back to control room</a>
+      <div class="header-pill">Speaker workspace</div>
+    </header>
+
+    <section class="speaker-grid">
+      <aside class="surface speaker-rail">
+        <div class="rail-block">
+          <p class="section-kicker">Speaker console</p>
+          <h1 class="page-title medium">Control the live microphone feed for this session.</h1>
+          <p class="muted">
+            Keep this page private while you speak. The audience should only receive the secured viewer link.
+          </p>
+        </div>
+
+        <div class="rail-block cluster">
+          <div class="meta-chip">Session <strong id="sessionId"></strong></div>
+          <div id="statusBadge" class="status-chip" data-state="idle">Idle</div>
+        </div>
+
+        <div class="rail-block">
+          <p class="section-kicker">Broadcast controls</p>
+          <div class="stack-actions">
+            <button id="startBtn" class="button button-primary" type="button">Start mic</button>
+            <button id="stopBtn" class="button button-secondary" type="button" disabled>Stop stream</button>
+            <button id="copyViewerBtn" class="button button-ghost" type="button">Copy viewer link</button>
+          </div>
+        </div>
+
+        <p id="speakerNotice" class="notice" data-state="neutral">
+          The viewer link is secured and ready to share with your audience.
+        </p>
+
+        <div class="rail-block tips-block">
+          <p class="section-kicker">Live notes</p>
+          <h2>Cleaner speech, cleaner captions.</h2>
+          <ul class="feature-list">
+            <li>Use a stable microphone and keep this tab in the foreground.</li>
+            <li>Pause briefly between answers so final transcript segments land cleanly.</li>
+            <li>Share only the viewer link publicly and keep the speaker console private.</li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface speaker-stage">
+        <div class="panel-head">
+          <div>
+            <p class="section-kicker">Live preview</p>
+            <h2>Transcript monitor</h2>
+          </div>
+          <span class="mini-label">Speaker-side preview</span>
+        </div>
+        <p class="muted stage-copy">
+          This preview mirrors the live speech recognition stream so you can sanity-check the transcript before viewers see the final flow.
+        </p>
+        <div id="livePreviewOverlay" class="stage-overlay" hidden>
+          <p class="section-kicker">Practice mic active</p>
+          <h3>Live preview is paused</h3>
+          <p class="muted">
+            The transcript monitor is temporarily locked so the spoken practice question and the live caption preview do not compete on the same screen.
+          </p>
+        </div>
+        <pre id="transcriptBox" class="transcript stage-transcript">Microphone preview will appear here.</pre>
+      </section>
+    </section>
+
+    <section class="practice-grid">
+      <article class="surface practice-side-panel">
+        <div class="panel-head">
+          <div>
+            <p class="section-kicker">Practice copilot</p>
+            <h2>Resume grounding</h2>
+          </div>
+          <span class="mini-label">RAM only</span>
+        </div>
+        <p class="muted">
+          Upload a PDF or <code>.docx</code> resume for mock-interview grounding. The extracted text stays tied to this session in memory and expires with the session.
+        </p>
+        <label class="field-label" for="resumeFileInput">Resume file</label>
+        <input id="resumeFileInput" class="file-input" type="file" accept=".pdf,.docx" />
+        <div class="inline-actions">
+          <button id="uploadResumeBtn" class="button button-secondary" type="button">Upload resume</button>
+        </div>
+        <p id="resumeStatus" class="notice" data-state="neutral">
+          No resume uploaded yet.
+        </p>
+        <div id="resumeMeta" class="meta-note">
+          Upload a resume to ground practice answers and reduce hallucinations.
+        </div>
+      </article>
+
+      <article class="surface practice-main-panel practice-command-center">
+        <div class="panel-head practice-command-head">
+          <div>
+            <p class="section-kicker">Mock interview mode</p>
+            <h2>Practice answer generator</h2>
+          </div>
+          <div class="cluster practice-head-tools">
+            <span class="mini-label">Interrupt-ready flow</span>
+            <button id="useTranscriptBtn" class="button button-ghost" type="button">Use live transcript</button>
+          </div>
+        </div>
+        <p class="muted practice-subcopy">
+          Capture the next question however you want, interrupt generation whenever needed, and keep the answer feed polished for the viewer without polluting the normal transcript lane.
+        </p>
+
+        <div class="practice-cockpit-grid">
+          <section class="practice-composer-card">
+            <div class="practice-toolbar">
+              <button id="togglePracticeMicBtn" class="button button-secondary" type="button">Start practice mic</button>
+              <button id="toggleAutoSendBtn" class="button button-ghost" type="button" aria-pressed="false">Auto-send to viewer: Off</button>
+              <span id="practiceMicStatus" class="status-chip" data-state="idle">Practice mic off</span>
+            </div>
+
+            <label class="field-label" for="aiQuestionInput">Practice question</label>
+            <textarea id="aiQuestionInput" class="text-input practice-question" placeholder="Paste a practice question here, or pull in the current transcript preview."></textarea>
+
+            <div class="practice-action-row">
+              <button id="generateAiBtn" class="button button-primary" type="button">Generate practice answer</button>
+              <button id="sendAiToViewerBtn" class="button button-secondary" type="button" disabled>Send answer to viewer</button>
+              <button id="interruptAiBtn" class="button button-danger" type="button" disabled>Interrupt</button>
+              <button id="interruptToMicBtn" class="button button-ghost" type="button" disabled>Interrupt + Start mic</button>
+            </div>
+
+            <div class="practice-status-row">
+              <span id="aiStatusBadge" class="status-chip" data-state="idle">Practice AI idle</span>
+              <span class="mini-label">Resume grounded when available</span>
+            </div>
+
+            <p id="aiStatusNotice" class="notice" data-state="neutral">
+              Upload a resume first for the strongest grounding, then generate a practice answer here. The practice mic never writes its captured question into the normal viewer transcript stream.
+            </p>
+          </section>
+
+          <section class="practice-answer-stage">
+            <div class="practice-answer-head">
+              <div>
+                <p class="section-kicker">Live response stream</p>
+                <h3>Candidate answer canvas</h3>
+              </div>
+              <span class="mini-label">Code blocks format automatically</span>
+            </div>
+            <div id="aiAnswerBox" class="transcript-block practice-answer-box">Practice answers and generated code will stream here.</div>
+          </section>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="./js/common.js"></script>
+  <script src="./js/speaker.js"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Transcript Control Room</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body class="screen-home">
+  <main class="page-shell">
+    <header class="app-header">
+      <div class="brand-lockup">
+        <p class="eyebrow">Live Transcript Studio</p>
+        <h1 class="page-title">Control room for secure, zero-storage caption sessions.</h1>
+      </div>
+      <div class="header-pill">Ephemeral sessions</div>
+    </header>
+
+    <section class="hero-grid">
+      <article class="surface surface-hero">
+        <p class="section-kicker">Operations</p>
+        <h2>Launch, hand off, and monitor live transcript rooms from one place.</h2>
+        <p class="lede">
+          Point the frontend at your backend, create a fresh room, and hand out secure speaker and viewer links without writing session data to permanent storage.
+        </p>
+        <div class="metric-strip">
+          <div class="metric-card">
+            <span class="metric-label">Privacy</span>
+            <strong class="metric-value">Zero storage</strong>
+            <span class="metric-copy">Sessions stay in memory only.</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Routing</span>
+            <strong class="metric-value">Speaker to audience</strong>
+            <span class="metric-copy">One host link, one viewer link.</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Deployments</span>
+            <strong class="metric-value">Local or hosted</strong>
+            <span class="metric-copy">Works with <code>ws://</code>, <code>wss://</code>, <code>http://</code>, or <code>https://</code> backends.</span>
+          </div>
+        </div>
+        <p id="homeNotice" class="notice" data-state="neutral">
+          Save the backend once, then mint a secure session whenever you are ready to go live.
+        </p>
+      </article>
+
+      <aside class="surface surface-highlight">
+        <p class="section-kicker">Runbook</p>
+        <h2>Built for quick live handoffs.</h2>
+        <div class="timeline-list">
+          <div class="timeline-item">
+            <span class="timeline-index">01</span>
+            <div>
+              <strong>Save backend</strong>
+              <p>Point the control room at the FastAPI host that owns the WebSocket session.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-index">02</span>
+            <div>
+              <strong>Create session</strong>
+              <p>Generate fresh speaker and viewer links directly from the backend.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-index">03</span>
+            <div>
+              <strong>Go live</strong>
+              <p>Keep the speaker console private and share the viewer console where captions are needed.</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="workspace-grid">
+      <article class="surface card panel-form">
+        <div class="panel-head">
+          <div>
+            <p class="section-kicker">Connection</p>
+            <h2>Backend target</h2>
+          </div>
+          <span id="backendSummary" class="status-chip" data-state="neutral">Waiting for backend</span>
+        </div>
+        <p class="muted">
+          Paste the backend base URL below. The control room will automatically use the HTTP version for session creation and the WebSocket version in live consoles.
+        </p>
+        <label class="field-label" for="backendUrl">Backend base URL</label>
+        <input id="backendUrl" type="text" placeholder="ws://localhost:8000" />
+        <div class="inline-actions">
+          <button id="saveBackendBtn" class="button button-secondary" type="button">Save backend</button>
+        </div>
+      </article>
+
+      <article class="surface card panel-session">
+        <div class="panel-head">
+          <div>
+            <p class="section-kicker">Session launch</p>
+            <h2>Create a secure room</h2>
+          </div>
+          <button id="createSessionBtn" class="button button-primary" type="button">Create secure session</button>
+        </div>
+        <div id="sessionOutput" class="session-output empty-state">
+          Fresh speaker and viewer links will appear here after the backend responds.
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="./js/common.js"></script>
+  <script src="./js/index.js"></script>
+</body>
+</html>
